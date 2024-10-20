@@ -10,7 +10,7 @@ import EditBudgetModal from "./components/EditBudgetModal";
 import AddCheckModal from "./components/AddCheckModal";
 import { useState } from "react";
 import { UNCATEGORIZED_BUDGET_ID, useBudgets } from "./contexts/BudgetsContext";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { HashRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DebtsPage from "./DebtsPage"; // Import the new DebtsPage component
 
 function App() {
