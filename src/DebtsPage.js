@@ -47,9 +47,8 @@ function DebtsPage() {
   };
 
   // Function to get current date in US CST
-const getCurrentDateInCST = () => {
+  const getCurrentDateInCST = () => {
     const now = new Date();
-    // Get the UTC time and adjust for CST (UTC-6 for standard time, UTC-5 for daylight saving)
     const offset = now.getTimezoneOffset() * 60000; // Convert minutes to milliseconds
     const cstDate = new Date(now.getTime() + offset - 6 * 3600000); // Adjust for CST
     return cstDate.toLocaleDateString(); // Format to locale date string
@@ -82,7 +81,6 @@ const getCurrentDateInCST = () => {
     setShowAddModal(false);
   };
   
-
   // Delete a debt
   const handleDeleteDebt = (index) => {
     const updatedDebts = debts.filter((_, i) => i !== index);
@@ -102,10 +100,20 @@ const getCurrentDateInCST = () => {
   // Sort debts by amount (lowest to highest)
   const sortedDebts = debts.sort((a, b) => a.amount - b.amount);
 
+  // Format currency function
+  const formatCurrency = (amount) => {
+    return amount.toLocaleString(undefined, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   return (
     <Container>
       <h1 className="my-3">Debts</h1>
-      <h2>Total: ${totalDebt.toFixed(2)}</h2>
+      <h2>Total: {formatCurrency(totalDebt)}</h2>
       
       <div className="d-flex justify-content-between mb-3">
         <Button variant="primary" onClick={handleAddNewDebt}>
@@ -123,7 +131,7 @@ const getCurrentDateInCST = () => {
               <Card.Body>
                 <Card.Title>{debt.debtor}</Card.Title>
                 <Card.Text>
-                  <strong>Amount:</strong> ${debt.amount.toFixed(2)} <br />
+                  <strong>Amount:</strong> {formatCurrency(debt.amount)} <br />
                   <strong>Last Payment Made:</strong> {new Date(debt.lastPayment).toLocaleDateString()}
                 </Card.Text>
                 <Button variant="secondary" onClick={() => handleEdit(index)} style={{ marginRight: '10px' }}>
