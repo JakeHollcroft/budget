@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Container, Row, Col, Form, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf'; // Import jsPDF for generating PDF reports
 
 function DebtsPage() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [debts, setDebts] = useState(() => {
     const savedDebts = localStorage.getItem('debts');
     return savedDebts ? JSON.parse(savedDebts) : []; // Initialize with an empty array
@@ -69,7 +70,7 @@ function DebtsPage() {
       handleDeleteDebt(currentDebt.index);
     }
   };
-  
+
   // Add a new debt
   const handleAddDebt = () => {
     const newDebtEntry = {
@@ -80,7 +81,7 @@ function DebtsPage() {
     setDebts([...debts, newDebtEntry]);
     setShowAddModal(false);
   };
-  
+
   // Delete a debt
   const handleDeleteDebt = (index) => {
     const updatedDebts = debts.filter((_, i) => i !== index);
@@ -97,6 +98,11 @@ function DebtsPage() {
   // Calculate the total amount of all debts
   const totalDebt = debts.reduce((total, debt) => total + debt.amount, 0);
 
+  // Find the most recent payment date
+  const mostRecentDate = debts.length
+    ? new Date(Math.max(...debts.map(debt => new Date(debt.lastPayment)))).toLocaleDateString()
+    : 'No payments made';
+
   // Sort debts by amount (lowest to highest)
   const sortedDebts = debts.sort((a, b) => a.amount - b.amount);
 
@@ -110,14 +116,45 @@ function DebtsPage() {
     });
   };
 
+  // Function to generate PDF report
+  const generateReport = () => {
+    const doc = new jsPDF();
+    const todayDate = getCurrentDateInCST();
+    
+    // Add title and today's date
+    doc.setFontSize(16);
+    doc.text(`Debt Report - ${todayDate}`, 20, 20);
+
+    // Add total debt
+    doc.setFontSize(14);
+    doc.text(`Total Debt: ${formatCurrency(totalDebt)}`, 20, 40);
+
+    // Add each debt entry
+    sortedDebts.forEach((debt, index) => {
+      doc.setFontSize(12);
+      doc.text(
+        `${index + 1}. Debtor: ${debt.debtor}, Amount: ${formatCurrency(debt.amount)}, Last Payment: ${new Date(debt.lastPayment).toLocaleDateString()}`,
+        20,
+        60 + (index * 10)
+      );
+    });
+
+    // Save the PDF
+    doc.save(`Debt_Report_${todayDate}.pdf`);
+  };
+
   return (
     <Container>
       <h1 className="my-3">Debts</h1>
       <h2>Total: {formatCurrency(totalDebt)}</h2>
-      
+      <h3>Last Modified: {mostRecentDate}</h3> {/* Display most recent date */}
+
       <div className="d-flex justify-content-between mb-3">
         <Button variant="primary" onClick={handleAddNewDebt}>
           Add New Debt
+        </Button>
+        <Button variant="success" onClick={generateReport} style={{ marginLeft: '10px' }}>
+          Generate Report
         </Button>
         <Button variant="secondary" onClick={() => navigate('/')} style={{ marginLeft: 'auto' }}>
           Back to Budgets
@@ -222,22 +259,17 @@ function DebtsPage() {
         </Modal.Footer>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Debt Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
+          <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <p>Are you sure you want to delete this debt?</p>
-        </Modal.Body>
+        <Modal.Body>Are you sure you want to delete this debt?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={() => {
-            handleDeleteDebt(debtToDeleteIndex);
-            setDebtToDeleteIndex(null);
-          }}>
+          <Button variant="danger" onClick={() => handleDeleteDebt(debtToDeleteIndex)}>
             Delete
           </Button>
         </Modal.Footer>
