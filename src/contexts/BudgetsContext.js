@@ -1,4 +1,5 @@
-import React, { useContext, useState } from "react";
+// BudgetsContext.js
+import React, { useContext } from "react";
 import { v4 as uuidV4 } from "uuid";
 import useLocalStorage from "../hooks/useLocalStorage";
 
@@ -27,9 +28,12 @@ export const BudgetsProvider = ({ children }) => {
     return budgets.reduce((total, budget) => total + budget.max, 0);
   }
 
-  function addExpense({ description, amount, budgetId }) {
+  function addExpense({ description, amount, budgetId, date }) {
     setExpenses(prevExpenses => {
-      return [...prevExpenses, { id: uuidV4(), description, amount, budgetId }];
+      return [
+        ...prevExpenses,
+        { id: uuidV4(), description, amount, budgetId, date }
+      ];
     });
   }
 
@@ -39,7 +43,7 @@ export const BudgetsProvider = ({ children }) => {
 
     if (totalMaxBudget > totalCheckAmount) {
       alert("Total maximum budget exceeds total check amount!");
-      return false; // Validation failed
+      return false;
     }
 
     setBudgets(prevBudgets => {
@@ -48,7 +52,7 @@ export const BudgetsProvider = ({ children }) => {
       }
       return [...prevBudgets, { id: uuidV4(), name, max }];
     });
-    return true; // Validation passed
+    return true;
   }
 
   function editBudget({ id, name, max }) {
@@ -58,7 +62,7 @@ export const BudgetsProvider = ({ children }) => {
 
     if (totalMaxBudget > totalCheckAmount) {
       alert("Total maximum budget exceeds total check amount!");
-      return false; // Validation failed
+      return false;
     }
 
     setBudgets(prevBudgets => {
@@ -66,7 +70,7 @@ export const BudgetsProvider = ({ children }) => {
         budget.id === id ? { ...budget, name, max } : budget
       );
     });
-    return true; // Validation passed
+    return true;
   }
 
   function deleteBudget({ id }) {

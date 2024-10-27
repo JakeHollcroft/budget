@@ -1,25 +1,26 @@
-import { Form, Modal, Button } from "react-bootstrap"
-import { useRef } from "react"
-import { useBudgets, UNCATEGORIZED_BUDGET_ID } from "../contexts/BudgetsContext"
+// AddExpenseModal.js
+import React, { useRef, useState } from "react";
+import { Modal, Form, Button } from "react-bootstrap";
+import { UNCATEGORIZED_BUDGET_ID, useBudgets } from "../contexts/BudgetsContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-export default function AddExpenseModal({
-  show,
-  handleClose,
-  defaultBudgetId,
-}) {
-  const descriptionRef = useRef()
-  const amountRef = useRef()
-  const budgetIdRef = useRef()
-  const { addExpense, budgets } = useBudgets()
+export default function AddExpenseModal({ show, handleClose, defaultBudgetId }) {
+  const descriptionRef = useRef();
+  const amountRef = useRef();
+  const budgetIdRef = useRef();
+  const { addExpense, budgets } = useBudgets();
+  const [date, setDate] = useState(new Date());
 
   function handleSubmit(e) {
-    e.preventDefault()
+    e.preventDefault();
     addExpense({
       description: descriptionRef.current.value,
       amount: parseFloat(amountRef.current.value),
       budgetId: budgetIdRef.current.value,
-    })
-    handleClose()
+      date: date,
+    });
+    handleClose();
   }
 
   return (
@@ -35,24 +36,26 @@ export default function AddExpenseModal({
           </Form.Group>
           <Form.Group className="mb-3" controlId="amount">
             <Form.Label>Amount</Form.Label>
-            <Form.Control
-              ref={amountRef}
-              type="number"
-              required
-              min={0}
-              step={0.01}
-            />
+            <Form.Control ref={amountRef} type="number" required min={0} step={0.01} />
           </Form.Group>
           <Form.Group className="mb-3" controlId="budgetId">
             <Form.Label>Budget</Form.Label>
             <Form.Select defaultValue={defaultBudgetId} ref={budgetIdRef}>
-              <option id={UNCATEGORIZED_BUDGET_ID}>Uncategorized</option>
+              <option value={UNCATEGORIZED_BUDGET_ID}>Uncategorized</option>
               {budgets.map(budget => (
                 <option key={budget.id} value={budget.id}>
                   {budget.name}
                 </option>
               ))}
             </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="date">
+            <Form.Label>Date</Form.Label>
+            <DatePicker
+              selected={date}
+              onChange={(date) => setDate(date)}
+              className="form-control"
+            />
           </Form.Group>
           <div className="d-flex justify-content-end">
             <Button variant="primary" type="submit">
@@ -62,5 +65,5 @@ export default function AddExpenseModal({
         </Modal.Body>
       </Form>
     </Modal>
-  )
+  );
 }
