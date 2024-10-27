@@ -41,6 +41,8 @@ function App() {
     doc.text(`Budget Report - ${dateStr}`, 10, 10);
   
     let yPosition = 20;
+    const pageHeight = doc.internal.pageSize.height; // Get the height of the page
+    const margin = 10; // Margin from the bottom of the page
   
     // Adding check details if any
     if (checks && checks.length > 0) {
@@ -66,11 +68,15 @@ function App() {
             ? new Date(expense.date).toLocaleDateString("en-US")
             : "N/A";
           doc.setFont("helvetica", "normal"); // Reset font to normal for expenses
-          doc.text(
-            `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`,
-            10,
-            yPosition
-          );
+          const expenseText = `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`;
+          
+          // Check if the next line fits in the page
+          if (yPosition + 10 > pageHeight - margin) {
+            doc.addPage(); // Create a new page
+            yPosition = 10; // Reset yPosition for the new page
+          }
+  
+          doc.text(expenseText, 10, yPosition);
           yPosition += 10;
         });
       }
@@ -87,11 +93,15 @@ function App() {
           ? new Date(expense.date).toLocaleDateString("en-US")
           : "N/A";
         doc.setFont("helvetica", "normal"); // Reset font to normal for uncategorized expenses
-        doc.text(
-          `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`,
-          10,
-          yPosition
-        );
+        const expenseText = `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`;
+  
+        // Check if the next line fits in the page
+        if (yPosition + 10 > pageHeight - margin) {
+          doc.addPage(); // Create a new page
+          yPosition = 10; // Reset yPosition for the new page
+        }
+  
+        doc.text(expenseText, 10, yPosition);
         yPosition += 10;
       });
     }
@@ -99,8 +109,7 @@ function App() {
     // Save the PDF with the current date in the filename
     doc.save(`Budget_Report_${dateStr}.pdf`);
   }
-  
-  
+
 
   return (
     <Router>
