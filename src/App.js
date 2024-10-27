@@ -11,8 +11,8 @@ import AddCheckModal from "./components/AddCheckModal";
 import { useState } from "react";
 import { UNCATEGORIZED_BUDGET_ID, useBudgets } from "./contexts/BudgetsContext";
 import { HashRouter as Router, Route, Routes, Link } from "react-router-dom";
-import DebtsPage from "./DebtsPage"; // Import the new DebtsPage component
-import jsPDF from "jspdf"; // Import jsPDF
+import DebtsPage from "./DebtsPage";
+import jsPDF from "jspdf";
 
 function App() {
   const [showAddBudgetModal, setShowAddBudgetModal] = useState(false);
@@ -20,7 +20,7 @@ function App() {
   const [showAddCheckModal, setShowAddCheckModal] = useState(false);
   const [addExpenseModalBudgetId, setAddExpenseModalBudgetId] = useState();
   const [editBudgetId, setEditBudgetId] = useState();
-  const { budgets, getBudgetExpenses, checks } = useBudgets(); // Assuming checks is part of the context
+  const { budgets, getBudgetExpenses, checks } = useBudgets();
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState();
 
   function openAddExpenseModal(budgetId) {
@@ -35,49 +35,72 @@ function App() {
   // Function to generate the report PDF
   function generateReport() {
     const doc = new jsPDF();
-
+  
     const today = new Date();
-    const dateStr = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
     doc.text(`Budget Report - ${dateStr}`, 10, 10);
-
+  
     let yPosition = 20;
-    
-    // Assuming there's a single check for now, you might want to modify this if multiple checks exist
+  
+    // Adding check details if any
     if (checks && checks.length > 0) {
       const check = checks[checks.length - 1]; // Most recent check
       doc.text(`Check Amount: $${check.amount.toFixed(2)}`, 10, yPosition);
       yPosition += 10;
     }
-
+  
+    // Loop through each budget and list expenses with dates
     budgets.forEach((budget) => {
+      doc.setFont("helvetica", "bold"); // Set font to bold for budget names
       doc.text(`Budget: ${budget.name}`, 10, yPosition);
       yPosition += 10;
-
+  
       const expenses = getBudgetExpenses(budget.id);
       if (expenses.length === 0) {
+        doc.setFont("helvetica", "normal"); // Reset font to normal for "No expenses" message
         doc.text("  No expenses", 10, yPosition);
         yPosition += 10;
       } else {
         expenses.forEach((expense) => {
-          doc.text(`  ${expense.description}: $${expense.amount.toFixed(2)}`, 10, yPosition);
+          const expenseDate = expense.date
+            ? new Date(expense.date).toLocaleDateString("en-US")
+            : "N/A";
+          doc.setFont("helvetica", "normal"); // Reset font to normal for expenses
+          doc.text(
+            `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`,
+            10,
+            yPosition
+          );
           yPosition += 10;
         });
       }
     });
-
-    // Add a section for uncategorized expenses if they exist
+  
+    // Add a section for uncategorized expenses with dates if they exist
     const uncategorizedExpenses = getBudgetExpenses(UNCATEGORIZED_BUDGET_ID);
     if (uncategorizedExpenses.length > 0) {
+      doc.setFont("helvetica", "bold"); // Set font to bold for Uncategorized section
       doc.text("Uncategorized Expenses:", 10, yPosition);
       yPosition += 10;
       uncategorizedExpenses.forEach((expense) => {
-        doc.text(`  ${expense.description}: $${expense.amount.toFixed(2)}`, 10, yPosition);
+        const expenseDate = expense.date
+          ? new Date(expense.date).toLocaleDateString("en-US")
+          : "N/A";
+        doc.setFont("helvetica", "normal"); // Reset font to normal for uncategorized expenses
+        doc.text(
+          `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`,
+          10,
+          yPosition
+        );
         yPosition += 10;
       });
     }
-
+  
+    // Save the PDF with the current date in the filename
     doc.save(`Budget_Report_${dateStr}.pdf`);
   }
+  
+  
 
   return (
     <Router>
@@ -97,11 +120,9 @@ function App() {
                 <Button variant="outline-primary" onClick={() => setShowAddCheckModal(true)}>
                   Add Check
                 </Button>
-                {/* New Debts Button */}
                 <Link to="/debts">
                   <Button variant="outline-danger">Debts</Button>
                 </Link>
-                {/* Generate Report Button */}
                 <Button variant="outline-success" onClick={generateReport}>
                   Generate Report
                 </Button>
