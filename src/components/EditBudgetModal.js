@@ -6,7 +6,7 @@ export default function EditBudgetModal({ show, handleClose, budgetId }) {
   const nameRef = useRef();
   const maxRef = useRef();
   const [error, setError] = useState(null);
-  const { budgets, editBudget } = useBudgets();
+  const { budgets, editBudget, deleteBudget } = useBudgets();
   const budget = budgets.find(b => b.id === budgetId);
 
   function handleSubmit(e) {
@@ -28,6 +28,11 @@ export default function EditBudgetModal({ show, handleClose, budgetId }) {
     }
   }
 
+  function handleDelete() {
+    deleteBudget({ id: budgetId });  // Pass the ID as an object with `id` property
+    handleClose();
+  }
+
   if (!budget) return null; // Handle case when budget is not found
 
   return (
@@ -46,7 +51,10 @@ export default function EditBudgetModal({ show, handleClose, budgetId }) {
             <Form.Label>Maximum Spending</Form.Label>
             <Form.Control ref={maxRef} type="number" required min={0} step={0.01} defaultValue={budget.max} />
           </Form.Group>
-          <div className="d-flex justify-content-end">
+          <div className="d-flex justify-content-between">
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
             <Button variant="primary" type="submit">
               Save
             </Button>

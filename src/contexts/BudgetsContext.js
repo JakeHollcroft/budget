@@ -74,6 +74,7 @@ export const BudgetsProvider = ({ children }) => {
   }
 
   function deleteBudget({ id }) {
+    // Reassign expenses with the deleted budget ID to 'Uncategorized'
     setExpenses(prevExpenses => {
       return prevExpenses.map(expense => {
         if (expense.budgetId !== id) return expense;
@@ -81,6 +82,7 @@ export const BudgetsProvider = ({ children }) => {
       });
     });
 
+    // Remove the budget from the budgets list
     setBudgets(prevBudgets => {
       return prevBudgets.filter(budget => budget.id !== id);
     });
