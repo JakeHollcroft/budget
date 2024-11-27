@@ -12,6 +12,7 @@ import { useState } from "react";
 import { UNCATEGORIZED_BUDGET_ID, useBudgets } from "./contexts/BudgetsContext";
 import { HashRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DebtsPage from "./DebtsPage";
+import SavingsPage from "./Savings"; // Import SavingsPage
 import jsPDF from "jspdf";
 
 function App() {
@@ -35,28 +36,28 @@ function App() {
   // Function to generate the report PDF
   function generateReport() {
     const doc = new jsPDF();
-  
+
     const today = new Date();
     const dateStr = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
     doc.text(`Budget Report - ${dateStr}`, 10, 10);
-  
+
     let yPosition = 20;
     const pageHeight = doc.internal.pageSize.height; // Get the height of the page
     const margin = 10; // Margin from the bottom of the page
-  
+
     // Adding check details if any
     if (checks && checks.length > 0) {
       const check = checks[checks.length - 1]; // Most recent check
       doc.text(`Check Amount: $${check.amount.toFixed(2)}`, 10, yPosition);
       yPosition += 10;
     }
-  
+
     // Loop through each budget and list expenses with dates
     budgets.forEach((budget) => {
       doc.setFont("helvetica", "bold"); // Set font to bold for budget names
       doc.text(`Budget: ${budget.name}`, 10, yPosition);
       yPosition += 10;
-  
+
       const expenses = getBudgetExpenses(budget.id);
       if (expenses.length === 0) {
         doc.setFont("helvetica", "normal"); // Reset font to normal for "No expenses" message
@@ -69,19 +70,19 @@ function App() {
             : "N/A";
           doc.setFont("helvetica", "normal"); // Reset font to normal for expenses
           const expenseText = `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`;
-          
+
           // Check if the next line fits in the page
           if (yPosition + 10 > pageHeight - margin) {
             doc.addPage(); // Create a new page
             yPosition = 10; // Reset yPosition for the new page
           }
-  
+
           doc.text(expenseText, 10, yPosition);
           yPosition += 10;
         });
       }
     });
-  
+
     // Add a section for uncategorized expenses with dates if they exist
     const uncategorizedExpenses = getBudgetExpenses(UNCATEGORIZED_BUDGET_ID);
     if (uncategorizedExpenses.length > 0) {
@@ -94,22 +95,21 @@ function App() {
           : "N/A";
         doc.setFont("helvetica", "normal"); // Reset font to normal for uncategorized expenses
         const expenseText = `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`;
-  
+
         // Check if the next line fits in the page
         if (yPosition + 10 > pageHeight - margin) {
           doc.addPage(); // Create a new page
           yPosition = 10; // Reset yPosition for the new page
         }
-  
+
         doc.text(expenseText, 10, yPosition);
         yPosition += 10;
       });
     }
-  
+
     // Save the PDF with the current date in the filename
     doc.save(`Budget_Report_${dateStr}.pdf`);
   }
-
 
   return (
     <Router>
@@ -131,6 +131,9 @@ function App() {
                 </Button>
                 <Link to="/debts">
                   <Button variant="outline-danger">Debts</Button>
+                </Link>
+                <Link to="/savings">
+                  <Button variant="outline-success">Savings</Button>
                 </Link>
                 <Button variant="outline-success" onClick={generateReport}>
                   Generate Report
@@ -175,6 +178,7 @@ function App() {
           }
         />
         <Route path="/debts" element={<DebtsPage />} />
+        <Route path="/savings" element={<SavingsPage />} />
       </Routes>
       <AddBudgetModal
         show={showAddBudgetModal}
