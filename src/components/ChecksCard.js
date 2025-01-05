@@ -10,15 +10,21 @@ export default function ChecksCard({ checks, gray, onAddCheckClick }) {
   }
 
   const formatDate = (dateString) => {
+    if (!dateString) {
+      // If no date is provided, set it to today's date
+      dateString = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    }
+  
     // Extract the year, month, and day from the dateString
     const [year, month, day] = dateString.split('-');
-  
+    
     // Create a new Date object using the extracted values (months are 0-indexed)
-    const date = new Date(year, month - 1, day); 
+    const date = new Date(year, month - 1, day);
   
     // Return the formatted date string in MM/DD/YYYY format
     return date.toLocaleDateString("en-US"); // MM/DD/YYYY format
   };
+  
   
   // Sort the checks by date from newest to oldest
   const sortedChecks = [...checks].sort((a, b) => new Date(b.date) - new Date(a.date));
