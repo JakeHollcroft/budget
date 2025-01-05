@@ -33,14 +33,6 @@ export const BudgetsProvider = ({ children }) => {
   };
 
   const addBudget = ({ name, max }) => {
-    const totalMaxBudget = getTotalMaxBudget() + max;
-    const totalCheckAmount = getTotalCheckAmount();
-
-    if (totalMaxBudget > totalCheckAmount) {
-      alert("Total maximum budget exceeds total check amount!");
-      return false;
-    }
-
     setBudgets((prevBudgets) => {
       if (prevBudgets.find((budget) => budget.name === name)) {
         return prevBudgets;
