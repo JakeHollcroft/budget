@@ -12,17 +12,18 @@ import { useState } from "react";
 import { UNCATEGORIZED_BUDGET_ID, useBudgets } from "./contexts/BudgetsContext";
 import { HashRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DebtsPage from "./DebtsPage";
-import SavingsPage from "./Savings"; // Import SavingsPage
+import SavingsPage from "./Savings";
 import jsPDF from "jspdf";
+import ChecksCard from "./components/ChecksCard";
 
 function App() {
   const [showAddBudgetModal, setShowAddBudgetModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
-  const [showAddCheckModal, setShowAddCheckModal] = useState(false);
   const [addExpenseModalBudgetId, setAddExpenseModalBudgetId] = useState();
   const [editBudgetId, setEditBudgetId] = useState();
   const { budgets, getBudgetExpenses, checks } = useBudgets();
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState();
+  const [showAddCheckModal, setShowAddCheckModal] = useState(false)
 
   function openAddExpenseModal(budgetId) {
     setShowAddExpenseModal(true);
@@ -42,25 +43,42 @@ function App() {
     doc.text(`Budget Report - ${dateStr}`, 10, 10);
 
     let yPosition = 20;
-    const pageHeight = doc.internal.pageSize.height; // Get the height of the page
-    const margin = 10; // Margin from the bottom of the page
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 10;
 
-    // Adding check details if any
+    // Adding check details if available
+    doc.setFont("helvetica", "bold");
+    doc.text("Check Details:", 10, yPosition);
+    yPosition += 10;
+
     if (checks && checks.length > 0) {
-      const check = checks[checks.length - 1]; // Most recent check
-      doc.text(`Check Amount: $${check.amount.toFixed(2)}`, 10, yPosition);
+      checks.forEach((check, index) => {
+        doc.setFont("helvetica", "normal");
+        const checkText = `Check ${index + 1}: Amount $${check.amount.toFixed(
+          2
+        )} | Date: ${new Date(check.date).toLocaleDateString("en-US")}`;
+        if (yPosition + 10 > pageHeight - margin) {
+          doc.addPage();
+          yPosition = 10;
+        }
+        doc.text(checkText, 10, yPosition);
+        yPosition += 10;
+      });
+    } else {
+      doc.setFont("helvetica", "normal");
+      doc.text("  No checks available.", 10, yPosition);
       yPosition += 10;
     }
 
-    // Loop through each budget and list expenses with dates
+    // Adding budget and expense details
     budgets.forEach((budget) => {
-      doc.setFont("helvetica", "bold"); // Set font to bold for budget names
+      doc.setFont("helvetica", "bold");
       doc.text(`Budget: ${budget.name}`, 10, yPosition);
       yPosition += 10;
 
       const expenses = getBudgetExpenses(budget.id);
       if (expenses.length === 0) {
-        doc.setFont("helvetica", "normal"); // Reset font to normal for "No expenses" message
+        doc.setFont("helvetica", "normal");
         doc.text("  No expenses", 10, yPosition);
         yPosition += 10;
       } else {
@@ -68,46 +86,44 @@ function App() {
           const expenseDate = expense.date
             ? new Date(expense.date).toLocaleDateString("en-US")
             : "N/A";
-          doc.setFont("helvetica", "normal"); // Reset font to normal for expenses
-          const expenseText = `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`;
+          const expenseText = `  ${expense.description}: $${expense.amount.toFixed(
+            2
+          )} | ${expenseDate}`;
 
-          // Check if the next line fits in the page
           if (yPosition + 10 > pageHeight - margin) {
-            doc.addPage(); // Create a new page
-            yPosition = 10; // Reset yPosition for the new page
+            doc.addPage();
+            yPosition = 10;
           }
-
           doc.text(expenseText, 10, yPosition);
           yPosition += 10;
         });
       }
     });
 
-    // Add a section for uncategorized expenses with dates if they exist
+    // Add uncategorized expenses
     const uncategorizedExpenses = getBudgetExpenses(UNCATEGORIZED_BUDGET_ID);
     if (uncategorizedExpenses.length > 0) {
-      doc.setFont("helvetica", "bold"); // Set font to bold for Uncategorized section
+      doc.setFont("helvetica", "bold");
       doc.text("Uncategorized Expenses:", 10, yPosition);
       yPosition += 10;
       uncategorizedExpenses.forEach((expense) => {
         const expenseDate = expense.date
           ? new Date(expense.date).toLocaleDateString("en-US")
           : "N/A";
-        doc.setFont("helvetica", "normal"); // Reset font to normal for uncategorized expenses
-        const expenseText = `  ${expense.description}: $${expense.amount.toFixed(2)} | ${expenseDate}`;
+        const expenseText = `  ${expense.description}: $${expense.amount.toFixed(
+          2
+        )} | ${expenseDate}`;
 
-        // Check if the next line fits in the page
         if (yPosition + 10 > pageHeight - margin) {
-          doc.addPage(); // Create a new page
-          yPosition = 10; // Reset yPosition for the new page
+          doc.addPage();
+          yPosition = 10;
         }
-
         doc.text(expenseText, 10, yPosition);
         yPosition += 10;
       });
     }
 
-    // Save the PDF with the current date in the filename
+    // Save the report
     doc.save(`Budget_Report_${dateStr}.pdf`);
   }
 
@@ -125,9 +141,6 @@ function App() {
                 </Button>
                 <Button variant="outline-primary" onClick={openAddExpenseModal}>
                   Add Expense
-                </Button>
-                <Button variant="outline-primary" onClick={() => setShowAddCheckModal(true)}>
-                  Add Check
                 </Button>
                 <Link to="/debts">
                   <Button variant="outline-danger">Debts</Button>
@@ -174,6 +187,14 @@ function App() {
                 />
               </div>
               <TotalBudgetCard />
+
+
+              <ChecksCard
+                checks={checks}
+                onAddCheckClick={() => setShowAddCheckModal(true)}
+              />
+
+
             </Container>
           }
         />

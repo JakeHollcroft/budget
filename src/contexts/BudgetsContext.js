@@ -16,28 +16,23 @@ export const BudgetsProvider = ({ children }) => {
   const [expenses, setExpenses] = useLocalStorage("expenses", []);
   const [checks, setChecks] = useLocalStorage("checks", []);
 
-  function getBudgetExpenses(budgetId) {
-    return expenses.filter(expense => expense.budgetId === budgetId);
-  }
+  const getBudgetExpenses = (budgetId) =>
+    expenses.filter((expense) => expense.budgetId === budgetId);
 
-  function getTotalCheckAmount() {
-    return checks.reduce((total, check) => total + check.amount, 0);
-  }
+  const getTotalCheckAmount = () =>
+    checks.reduce((total, check) => total + check.amount, 0);
 
-  function getTotalMaxBudget() {
-    return budgets.reduce((total, budget) => total + budget.max, 0);
-  }
+  const getTotalMaxBudget = () =>
+    budgets.reduce((total, budget) => total + budget.max, 0);
 
-  function addExpense({ description, amount, budgetId, date }) {
-    setExpenses(prevExpenses => {
-      return [
-        ...prevExpenses,
-        { id: uuidV4(), description, amount, budgetId, date }
-      ];
-    });
-  }
+  const addExpense = ({ description, amount, budgetId, date }) => {
+    setExpenses((prevExpenses) => [
+      ...prevExpenses,
+      { id: uuidV4(), description, amount, budgetId, date },
+    ]);
+  };
 
-  function addBudget({ name, max }) {
+  const addBudget = ({ name, max }) => {
     const totalMaxBudget = getTotalMaxBudget() + max;
     const totalCheckAmount = getTotalCheckAmount();
 
@@ -46,17 +41,17 @@ export const BudgetsProvider = ({ children }) => {
       return false;
     }
 
-    setBudgets(prevBudgets => {
-      if (prevBudgets.find(budget => budget.name === name)) {
+    setBudgets((prevBudgets) => {
+      if (prevBudgets.find((budget) => budget.name === name)) {
         return prevBudgets;
       }
       return [...prevBudgets, { id: uuidV4(), name, max }];
     });
     return true;
-  }
+  };
 
-  function editBudget({ id, name, max }) {
-    const currentBudgetMax = budgets.find(b => b.id === id).max;
+  const editBudget = ({ id, name, max }) => {
+    const currentBudgetMax = budgets.find((b) => b.id === id)?.max || 0;
     const totalMaxBudget = getTotalMaxBudget() - currentBudgetMax + max;
     const totalCheckAmount = getTotalCheckAmount();
 
@@ -65,44 +60,43 @@ export const BudgetsProvider = ({ children }) => {
       return false;
     }
 
-    setBudgets(prevBudgets => {
-      return prevBudgets.map(budget =>
+    setBudgets((prevBudgets) =>
+      prevBudgets.map((budget) =>
         budget.id === id ? { ...budget, name, max } : budget
-      );
-    });
+      )
+    );
     return true;
-  }
+  };
 
-  function deleteBudget({ id }) {
-    // Reassign expenses with the deleted budget ID to 'Uncategorized'
-    setExpenses(prevExpenses => {
-      return prevExpenses.map(expense => {
-        if (expense.budgetId !== id) return expense;
-        return { ...expense, budgetId: UNCATEGORIZED_BUDGET_ID };
-      });
-    });
+  const deleteBudget = ({ id }) => {
+    setExpenses((prevExpenses) =>
+      prevExpenses.map((expense) =>
+        expense.budgetId === id
+          ? { ...expense, budgetId: UNCATEGORIZED_BUDGET_ID }
+          : expense
+      )
+    );
 
-    // Remove the budget from the budgets list
-    setBudgets(prevBudgets => {
-      return prevBudgets.filter(budget => budget.id !== id);
-    });
-  }
+    setBudgets((prevBudgets) => prevBudgets.filter((budget) => budget.id !== id));
+  };
 
-  function deleteExpense({ id }) {
-    setExpenses(prevExpenses => {
-      return prevExpenses.filter(expense => expense.id !== id);
-    });
-  }
+  const deleteExpense = ({ id }) => {
+    setExpenses((prevExpenses) =>
+      prevExpenses.filter((expense) => expense.id !== id)
+    );
+  };
 
-  function addCheck({ amount }) {
-    setChecks(prevChecks => {
-      return [...prevChecks, { id: uuidV4(), amount }];
-    });
-  }
+  // Updated addCheck function to include title and date
+  const addCheck = ({ amount, title, date }) => {
+    setChecks((prevChecks) => [
+      ...prevChecks,
+      { id: uuidV4(), amount, title, date }, // Now stores title and date along with amount
+    ]);
+  };
 
-  function resetChecks() {
+  const resetChecks = () => {
     setChecks([]);
-  }
+  };
 
   return (
     <BudgetsContext.Provider
@@ -118,6 +112,8 @@ export const BudgetsProvider = ({ children }) => {
         deleteExpense,
         addCheck,
         resetChecks,
+        getTotalCheckAmount,
+        getTotalMaxBudget,
       }}
     >
       {children}
