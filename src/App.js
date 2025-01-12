@@ -23,7 +23,7 @@ function App() {
   const [editBudgetId, setEditBudgetId] = useState();
   const { budgets, getBudgetExpenses, checks } = useBudgets();
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState();
-  const [showAddCheckModal, setShowAddCheckModal] = useState(false)
+  const [showAddCheckModal, setShowAddCheckModal] = useState(false);
 
   function openAddExpenseModal(budgetId) {
     setShowAddExpenseModal(true);
@@ -160,25 +160,45 @@ function App() {
                   alignItems: "flex-start",
                 }}
               >
-                {budgets.map((budget) => {
-                  const amount = getBudgetExpenses(budget.id).reduce(
-                    (total, expense) => total + expense.amount,
-                    0
-                  );
-                  return (
-                    <BudgetCard
-                      key={budget.id}
-                      name={budget.name}
-                      amount={amount}
-                      max={budget.max}
-                      onAddExpenseClick={() => openAddExpenseModal(budget.id)}
-                      onViewExpensesClick={() =>
-                        setViewExpensesModalBudgetId(budget.id)
-                      }
-                      onEditBudgetClick={() => openEditBudgetModal(budget.id)}
-                    />
-                  );
-                })}
+                {budgets
+                  .sort((a, b) => {
+                    // Sort by due date first (soonest to us)
+                    if (a.dueDate && b.dueDate) {
+                      return new Date(a.dueDate) - new Date(b.dueDate);
+                    }
+                    // If one of the due dates is missing, treat it as a later date
+                    if (!a.dueDate) return 1;
+                    if (!b.dueDate) return -1;
+                    return 0;
+                  })
+                  .sort((a, b) => {
+                    // If due dates are the same, sort by max budget (highest first)
+                    if (a.dueDate === b.dueDate) {
+                      return b.max - a.max;
+                    }
+                    return 0;
+                  })
+                  .map((budget) => {
+                    const amount = getBudgetExpenses(budget.id).reduce(
+                      (total, expense) => total + expense.amount,
+                      0
+                    );
+                    return (
+                      <BudgetCard
+                        key={budget.id}
+                        name={budget.name}
+                        amount={amount}
+                        max={budget.max}
+                        dueDate={budget.dueDate} // Pass the due date
+                        onAddExpenseClick={() => openAddExpenseModal(budget.id)}
+                        onViewExpensesClick={() =>
+                          setViewExpensesModalBudgetId(budget.id)
+                        }
+                        onEditBudgetClick={() => openEditBudgetModal(budget.id)}
+                      />
+                    );
+                  })}
+
                 <UncategorizedBudgetCard
                   onAddExpenseClick={openAddExpenseModal}
                   onViewExpensesClick={() =>
@@ -188,13 +208,10 @@ function App() {
               </div>
               <TotalBudgetCard />
 
-
               <ChecksCard
                 checks={checks}
                 onAddCheckClick={() => setShowAddCheckModal(true)}
               />
-
-
             </Container>
           }
         />

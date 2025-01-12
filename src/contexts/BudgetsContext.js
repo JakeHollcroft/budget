@@ -32,29 +32,25 @@ export const BudgetsProvider = ({ children }) => {
     ]);
   };
 
-  const addBudget = ({ name, max }) => {
+  const addBudget = ({ name, max, dueDate }) => {
     setBudgets((prevBudgets) => {
       if (prevBudgets.find((budget) => budget.name === name)) {
         return prevBudgets;
       }
-      return [...prevBudgets, { id: uuidV4(), name, max }];
+      return [
+        ...prevBudgets,
+        { id: uuidV4(), name, max, dueDate: dueDate || null }, // Include dueDate
+      ];
     });
     return true;
   };
 
-  const editBudget = ({ id, name, max }) => {
-    const currentBudgetMax = budgets.find((b) => b.id === id)?.max || 0;
-    const totalMaxBudget = getTotalMaxBudget() - currentBudgetMax + max;
-    const totalCheckAmount = getTotalCheckAmount();
-
-    if (totalMaxBudget > totalCheckAmount) {
-      alert("Total maximum budget exceeds total check amount!");
-      return false;
-    }
-
+  const editBudget = ({ id, name, max, dueDate }) => {
     setBudgets((prevBudgets) =>
       prevBudgets.map((budget) =>
-        budget.id === id ? { ...budget, name, max } : budget
+        budget.id === id
+          ? { ...budget, name, max, dueDate } // Include dueDate in the update
+          : budget
       )
     );
     return true;

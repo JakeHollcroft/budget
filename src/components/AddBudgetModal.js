@@ -5,12 +5,20 @@ import { useBudgets } from "../contexts/BudgetsContext"
 export default function AddBudgetModal({ show, handleClose }) {
   const nameRef = useRef()
   const maxRef = useRef()
+  const dueDateRef = useRef()
   const { addBudget } = useBudgets()
+
   function handleSubmit(e) {
     e.preventDefault()
+    const selectedDate = new Date(dueDateRef.current.value);
+
+    // Adjust the selected date to avoid the timezone shift issue.
+    const adjustedDate = new Date(selectedDate.setDate(selectedDate.getDate() + 1));
+
     addBudget({
       name: nameRef.current.value,
       max: parseFloat(maxRef.current.value),
+      dueDate: adjustedDate.toISOString().split('T')[0], // Only return the date part (YYYY-MM-DD)
     })
     handleClose()
   }
@@ -34,6 +42,14 @@ export default function AddBudgetModal({ show, handleClose }) {
               required
               min={0}
               step={0.01}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="dueDate">
+            <Form.Label>Due Date</Form.Label>
+            <Form.Control
+              ref={dueDateRef}
+              type="date"
+              required // Ensure this field is required
             />
           </Form.Group>
           <div className="d-flex justify-content-end">
