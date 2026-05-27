@@ -14,13 +14,9 @@ export function useBudgets() {
 export const BudgetsProvider = ({ children }) => {
   const [budgets, setBudgets] = useLocalStorage("budgets", []);
   const [expenses, setExpenses] = useLocalStorage("expenses", []);
-  const [checks, setChecks] = useLocalStorage("checks", []);
 
   const getBudgetExpenses = (budgetId) =>
     expenses.filter((expense) => expense.budgetId === budgetId);
-
-  const getTotalCheckAmount = () =>
-    checks.reduce((total, check) => total + check.amount, 0);
 
   const getTotalMaxBudget = () =>
     budgets.reduce((total, budget) => total + budget.max, 0);
@@ -74,33 +70,17 @@ export const BudgetsProvider = ({ children }) => {
     );
   };
 
-  // Updated addCheck function to include title and date
-  const addCheck = ({ amount, title, date }) => {
-    setChecks((prevChecks) => [
-      ...prevChecks,
-      { id: uuidV4(), amount, title, date }, // Now stores title and date along with amount
-    ]);
-  };
-
-  const resetChecks = () => {
-    setChecks([]);
-  };
-
   return (
     <BudgetsContext.Provider
       value={{
         budgets,
         expenses,
-        checks,
         getBudgetExpenses,
         addExpense,
         addBudget,
         editBudget,
         deleteBudget,
         deleteExpense,
-        addCheck,
-        resetChecks,
-        getTotalCheckAmount,
         getTotalMaxBudget,
       }}
     >

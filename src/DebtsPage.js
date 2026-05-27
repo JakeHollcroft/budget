@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Container, Row, Col, Form, Modal } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import jsPDF from 'jspdf'; // Import jsPDF for generating PDF reports
+import { Link } from 'react-router-dom';
+import jsPDF from 'jspdf';
 
 function DebtsPage() {
-  const navigate = useNavigate();
   const [debts, setDebts] = useState(() => {
     const savedDebts = localStorage.getItem('debts');
     return savedDebts ? JSON.parse(savedDebts) : []; // Initialize with an empty array
@@ -144,20 +143,26 @@ function DebtsPage() {
   };
 
   return (
-    <Container>
-      <h1 className="my-3">Debts</h1>
-      <h2>Total: {formatCurrency(totalDebt)}</h2>
-      <h3>Last Modified: {mostRecentDate}</h3> {/* Display most recent date */}
+    <Container className="py-4">
+      <div className="page-header mb-4">
+        <div className="d-flex align-items-center justify-content-between mb-2">
+          <h1 className="mb-0">Debts</h1>
+          <Link to="/">
+            <Button variant="outline-secondary" size="sm">
+              Back
+            </Button>
+          </Link>
+        </div>
+        <h2 className="total-amount text-danger">{formatCurrency(totalDebt)}</h2>
+        <p className="text-muted mb-0">Last Modified: {mostRecentDate}</p>
+      </div>
 
-      <div className="d-flex justify-content-between mb-3">
+      <div className="action-buttons mb-4">
         <Button variant="primary" onClick={handleAddNewDebt}>
-          Add New Debt
+          Add Debt
         </Button>
-        <Button variant="success" onClick={generateReport} style={{ marginLeft: '10px' }}>
-          Generate Report
-        </Button>
-        <Button variant="secondary" onClick={() => navigate('/')} style={{ marginLeft: 'auto' }}>
-          Back to Budgets
+        <Button variant="outline-success" onClick={generateReport}>
+          Report
         </Button>
       </div>
 

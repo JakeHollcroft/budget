@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Container, Row, Col, Form, Modal } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { jsPDF } from 'jspdf'; // Import jsPDF
+import { Link } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
 
 function SavingsPage() {
-  const navigate = useNavigate();
   const [savings, setSavings] = useState(() => {
     const savedSavings = localStorage.getItem('savings');
     return savedSavings ? JSON.parse(savedSavings) : [];
@@ -160,19 +159,25 @@ function SavingsPage() {
     .toFixed(2);
 
   return (
-    <Container>
-      <h1 className="my-3">Savings</h1>
-      <h2>Total Saved: ${totalSaved}</h2>
+    <Container className="py-4">
+      <div className="page-header mb-4">
+        <div className="d-flex align-items-center justify-content-between mb-2">
+          <h1 className="mb-0">Savings</h1>
+          <Link to="/">
+            <Button variant="outline-secondary" size="sm">
+              Back
+            </Button>
+          </Link>
+        </div>
+        <h2 className="total-amount text-success">${totalSaved}</h2>
+      </div>
 
-      <div className="d-flex justify-content-between mb-3">
+      <div className="action-buttons mb-4">
         <Button variant="primary" onClick={handleAddNewSavings}>
-          Add New Goal
+          Add Goal
         </Button>
-        <Button variant="secondary" onClick={() => navigate('/')}>
-          Back to Budgets
-        </Button>
-        <Button variant="info" onClick={handleGenerateReport}>
-          Generate Report
+        <Button variant="outline-info" onClick={handleGenerateReport}>
+          Report
         </Button>
       </div>
 

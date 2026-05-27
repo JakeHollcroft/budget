@@ -1,29 +1,25 @@
-import { Button, Stack } from "react-bootstrap";
-import Container from "react-bootstrap/Container";
+import { Button, Container, Navbar, Nav, Offcanvas } from "react-bootstrap";
 import AddBudgetModal from "./components/AddBudgetModal";
 import AddExpenseModal from "./components/AddExpenseModal";
 import BudgetCard from "./components/BudgetCard";
 import ViewExpensesModal from "./components/ViewExpensesModal";
 import UncategorizedBudgetCard from "./components/UncategorizedBudgetCard";
-import TotalBudgetCard from "./components/TotalBudgetCard";
 import EditBudgetModal from "./components/EditBudgetModal";
-import AddCheckModal from "./components/AddCheckModal";
 import { useState } from "react";
 import { UNCATEGORIZED_BUDGET_ID, useBudgets } from "./contexts/BudgetsContext";
 import { HashRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DebtsPage from "./DebtsPage";
 import SavingsPage from "./Savings";
 import jsPDF from "jspdf";
-import ChecksCard from "./components/ChecksCard";
+import "./App.css";
 
 function App() {
   const [showAddBudgetModal, setShowAddBudgetModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [addExpenseModalBudgetId, setAddExpenseModalBudgetId] = useState();
   const [editBudgetId, setEditBudgetId] = useState();
-  const { budgets, getBudgetExpenses, checks } = useBudgets();
+  const { budgets, getBudgetExpenses } = useBudgets();
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState();
-  const [showAddCheckModal, setShowAddCheckModal] = useState(false);
 
   function openAddExpenseModal(budgetId) {
     setShowAddExpenseModal(true);
@@ -45,30 +41,6 @@ function App() {
     let yPosition = 20;
     const pageHeight = doc.internal.pageSize.height;
     const margin = 10;
-
-    // Adding check details if available
-    doc.setFont("helvetica", "bold");
-    doc.text("Check Details:", 10, yPosition);
-    yPosition += 10;
-
-    if (checks && checks.length > 0) {
-      checks.forEach((check, index) => {
-        doc.setFont("helvetica", "normal");
-        const checkText = `Check ${index + 1}: Amount $${check.amount.toFixed(
-          2
-        )} | Date: ${new Date(check.date).toLocaleDateString("en-US")}`;
-        if (yPosition + 10 > pageHeight - margin) {
-          doc.addPage();
-          yPosition = 10;
-        }
-        doc.text(checkText, 10, yPosition);
-        yPosition += 10;
-      });
-    } else {
-      doc.setFont("helvetica", "normal");
-      doc.text("  No checks available.", 10, yPosition);
-      yPosition += 10;
-    }
 
     // Adding budget and expense details
     budgets.forEach((budget) => {
@@ -129,37 +101,63 @@ function App() {
 
   return (
     <Router>
+      <Navbar expand="md" className="navbar-dark mb-3" sticky="top">
+        <Container>
+          <Navbar.Brand as={Link} to="/" className="brand-text">
+            My Budget
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="main-navbar" />
+          <Navbar.Offcanvas
+            id="main-navbar"
+            placement="end"
+            className="offcanvas-dark"
+          >
+            <Offcanvas.Header closeButton className="offcanvas-header-dark">
+              <Offcanvas.Title>Menu</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+              <Nav className="justify-content-end flex-grow-1 pe-3">
+                <Nav.Link as={Link} to="/" className="nav-link-dark">
+                  Budget
+                </Nav.Link>
+                <Nav.Link as={Link} to="/debts" className="nav-link-dark nav-debts">
+                  Debts
+                </Nav.Link>
+                <Nav.Link as={Link} to="/savings" className="nav-link-dark nav-savings">
+                  Savings
+                </Nav.Link>
+              </Nav>
+              <div className="nav-actions">
+                <Button
+                  className="nav-btn"
+                  onClick={() => setShowAddBudgetModal(true)}
+                >
+                  Add Budget
+                </Button>
+                <Button
+                  className="nav-btn nav-btn-secondary"
+                  onClick={openAddExpenseModal}
+                >
+                  Add Expense
+                </Button>
+                <Button
+                  className="nav-btn nav-btn-secondary"
+                  onClick={generateReport}
+                >
+                  Report
+                </Button>
+              </div>
+            </Offcanvas.Body>
+          </Navbar.Offcanvas>
+        </Container>
+      </Navbar>
+
       <Routes>
         <Route
           path="/"
           element={
-            <Container className="my-3">
-              <Stack direction="horizontal" gap="2" className="mb-3">
-                <h1 className="me-auto">My Budget</h1>
-                <Button variant="primary" onClick={() => setShowAddBudgetModal(true)}>
-                  Add Budget
-                </Button>
-                <Button variant="outline-primary" onClick={openAddExpenseModal}>
-                  Add Expense
-                </Button>
-                <Link to="/debts">
-                  <Button variant="outline-danger">Debts</Button>
-                </Link>
-                <Link to="/savings">
-                  <Button variant="outline-success">Savings</Button>
-                </Link>
-                <Button variant="outline-success" onClick={generateReport}>
-                  Generate Report
-                </Button>
-              </Stack>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
-                  gap: "0.5rem",
-                  alignItems: "flex-start",
-                }}
-              >
+            <Container className="main-content">
+              <div className="budget-grid">
                 {budgets
                   .sort((a, b) => {
                     // Sort by due date first (soonest to us)
@@ -206,12 +204,6 @@ function App() {
                   }
                 />
               </div>
-              <TotalBudgetCard />
-
-              <ChecksCard
-                checks={checks}
-                onAddCheckClick={() => setShowAddCheckModal(true)}
-              />
             </Container>
           }
         />
@@ -235,10 +227,6 @@ function App() {
         show={editBudgetId != null}
         handleClose={() => setEditBudgetId(null)}
         budgetId={editBudgetId}
-      />
-      <AddCheckModal
-        show={showAddCheckModal}
-        handleClose={() => setShowAddCheckModal(false)}
       />
     </Router>
   );
