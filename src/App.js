@@ -112,6 +112,12 @@ function App() {
 
   return (
     <Router>
+      {error && (
+        <div className="error-banner">
+          <span>{error}</span>
+          <button onClick={refresh}>Retry</button>
+        </div>
+      )}
       <Navbar expand="md" className="navbar-dark mb-3" sticky="top">
         <Container>
           <Navbar.Brand as={Link} to="/" className="brand-text">
