@@ -70,22 +70,32 @@ export const BudgetsProvider = ({ children }) => {
 
   const addOneMonth = (dateString) => {
     if (!dateString) return null;
-    const date = new Date(dateString);
     
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
+    const parts = dateString.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
     
     const lastDayOfCurrentMonth = new Date(year, month + 1, 0).getDate();
     const isLastDayOfMonth = day === lastDayOfCurrentMonth;
     
-    if (isLastDayOfMonth) {
-      const lastDayOfNextMonth = new Date(year, month + 2, 0);
-      return lastDayOfNextMonth.toISOString().split('T')[0];
-    } else {
-      date.setMonth(month + 1);
-      return date.toISOString().split('T')[0];
+    let newYear = year;
+    let newMonth = month + 1;
+    
+    if (newMonth > 11) {
+      newMonth = 0;
+      newYear++;
     }
+    
+    let newDay;
+    if (isLastDayOfMonth) {
+      newDay = new Date(newYear, newMonth + 1, 0).getDate();
+    } else {
+      newDay = day;
+    }
+    
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${newYear}-${pad(newMonth + 1)}-${pad(newDay)}`;
   };
 
   const rollBudgets = () => {

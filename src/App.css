@@ -215,6 +215,11 @@ body {
   color: var(--text-secondary) !important;
 }
 
+.budget-card-info {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+}
+
 /* Override Bootstrap card backgrounds with dark variants */
 .card.bg-success,
 .card.bg-opacity-10.bg-success {
