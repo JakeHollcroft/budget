@@ -3,16 +3,17 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BudgetsProvider } from "./contexts/BudgetsContext"
-
+import { DataProvider } from "./contexts/DataContext";
+import { BudgetsProvider } from "./contexts/BudgetsContext";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <BudgetsProvider>
-          <App />
-    </BudgetsProvider>
-
+    <DataProvider>
+      <BudgetsProvider>
+        <App />
+      </BudgetsProvider>
+    </DataProvider>
   </React.StrictMode>
 );
 

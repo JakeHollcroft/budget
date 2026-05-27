@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, Button, Container, Row, Col, Form, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
+import { useData } from './contexts/DataContext';
 
 function SavingsPage() {
-  const [savings, setSavings] = useState(() => {
-    const savedSavings = localStorage.getItem('savings');
-    return savedSavings ? JSON.parse(savedSavings) : [];
-  });
+  const { savings, updateSavings } = useData();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newSavings, setNewSavings] = useState({ title: '', amount: 0, date: '' });
   const [currentSavingsIndex, setCurrentSavingsIndex] = useState(null);
   const [editPaymentIndex, setEditPaymentIndex] = useState(null);
 
-  useEffect(() => {
-    localStorage.setItem('savings', JSON.stringify(savings));
-  }, [savings]);
-
   const getCurrentDate = () => {
     const date = new Date();
-    return date.toLocaleDateString('en-US'); // MM/DD/YYYY format
+    return date.toLocaleDateString('en-US');
   };
 
   const formatDate = (date) => {
@@ -34,42 +28,33 @@ function SavingsPage() {
     doc.setFontSize(18);
     doc.text('Savings Report', 20, 20);
 
-    let yPosition = 30; // Start position for the report content
+    let yPosition = 30;
 
     savings.forEach((goal, index) => {
-      // Title for each goal, bolded
       doc.setFont('helvetica', 'bold');
       doc.text(`Goal: ${goal.title}`, 20, yPosition);
       yPosition += 10;
 
-      // Reset font to normal for the rest of the content
       doc.setFont('helvetica', 'normal');
 
       goal.payments.forEach((payment, paymentIndex) => {
-        // Indented payment details
         doc.text(`  Payment ${paymentIndex + 1}: ${formatDate(payment.date)} - $${payment.amount.toFixed(2)}`, 20, yPosition);
         yPosition += 10;
       });
 
-      // Add total saved for the goal
       const totalGoalSaved = goal.payments.reduce((sum, p) => sum + p.amount, 0).toFixed(2);
       doc.text(`Total Saved for ${goal.title}: $${totalGoalSaved}`, 20, yPosition);
       yPosition += 10;
-
-      // Add spacing between goals
       yPosition += 10;
 
-      // Add a page if content is too long
       if (yPosition > 270) {
         doc.addPage();
-        yPosition = 20; // Reset position to top
+        yPosition = 20;
       }
     });
 
-    // Add space before the total
     yPosition += 10;
     
-    // Total saved across all goals
     const totalSaved = savings
       .reduce((total, goal) => total + goal.payments.reduce((sum, p) => sum + p.amount, 0), 0)
       .toFixed(2);
@@ -77,29 +62,29 @@ function SavingsPage() {
     doc.setFont('helvetica', 'bold');
     doc.text(`Total Savings Across All Goals: $${totalSaved}`, 20, yPosition);
 
-    // Save the PDF
     doc.save('savings_report.pdf');
-};
-
+  };
 
   const handleAddSavings = () => {
     const { title, amount, date } = newSavings;
     const paymentDate = formatDate(date || getCurrentDate());
 
     if (currentSavingsIndex !== null) {
-      const updatedSavings = [...savings];
-      if (editPaymentIndex !== null) {
-        updatedSavings[currentSavingsIndex].payments[editPaymentIndex] = {
-          amount: parseFloat(amount),
-          date: paymentDate,
-        };
-      } else {
-        updatedSavings[currentSavingsIndex].payments.push({
-          amount: parseFloat(amount),
-          date: paymentDate,
-        });
-      }
-      setSavings(updatedSavings);
+      updateSavings((prevSavings) => {
+        const updatedSavings = [...prevSavings];
+        if (editPaymentIndex !== null) {
+          updatedSavings[currentSavingsIndex].payments[editPaymentIndex] = {
+            amount: parseFloat(amount),
+            date: paymentDate,
+          };
+        } else {
+          updatedSavings[currentSavingsIndex].payments.push({
+            amount: parseFloat(amount),
+            date: paymentDate,
+          });
+        }
+        return updatedSavings;
+      });
     } else {
       const newEntry = {
         title,
@@ -110,7 +95,7 @@ function SavingsPage() {
           },
         ],
       };
-      setSavings([...savings, newEntry]);
+      updateSavings((prevSavings) => [...prevSavings, newEntry]);
     }
 
     setShowAddModal(false);
@@ -137,15 +122,19 @@ function SavingsPage() {
   };
 
   const handleDeletePayment = (goalIndex, paymentIndex) => {
-    const updatedSavings = [...savings];
-    updatedSavings[goalIndex].payments.splice(paymentIndex, 1);
-    setSavings(updatedSavings);
+    updateSavings((prevSavings) => {
+      const updatedSavings = [...prevSavings];
+      updatedSavings[goalIndex].payments.splice(paymentIndex, 1);
+      return updatedSavings;
+    });
   };
 
   const handleDeleteGoal = (goalIndex) => {
-    const updatedSavings = [...savings];
-    updatedSavings.splice(goalIndex, 1);
-    setSavings(updatedSavings);
+    updateSavings((prevSavings) => {
+      const updatedSavings = [...prevSavings];
+      updatedSavings.splice(goalIndex, 1);
+      return updatedSavings;
+    });
   };
 
   const resetModalState = () => {
@@ -224,7 +213,6 @@ function SavingsPage() {
         ))}
       </Row>
 
-      {/* Add Savings Modal */}
       <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>{currentSavingsIndex !== null ? 'Add/Edit Payment' : 'Add New Savings'}</Modal.Title>

@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, Button, Container, Row, Col, Form, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
+import { useData } from './contexts/DataContext';
 
 function DebtsPage() {
-  const [debts, setDebts] = useState(() => {
-    const savedDebts = localStorage.getItem('debts');
-    return savedDebts ? JSON.parse(savedDebts) : []; // Initialize with an empty array
-  });
+  const { debts, updateDebts } = useData();
 
-  // State for modals
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -17,95 +14,77 @@ function DebtsPage() {
   const [newDebt, setNewDebt] = useState({ debtor: '', amount: '' });
   const [debtToDeleteIndex, setDebtToDeleteIndex] = useState(null);
 
-  // Effect to store debts in local storage whenever debts state is updated
-  useEffect(() => {
-    localStorage.setItem('debts', JSON.stringify(debts));
-  }, [debts]);
-
-  // Open the modal to edit a specific debt
   const handleEdit = (index) => {
     setCurrentDebt({ ...debts[index], index });
     setShowEditModal(true);
   };
 
-  // Open the modal to add a new debt
   const handleAddNewDebt = () => {
     setNewDebt({ debtor: '', amount: '' });
     setShowAddModal(true);
   };
 
-  // Handle form input changes for editing
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentDebt({ ...currentDebt, [name]: value });
   };
 
-  // Handle form input changes for adding new debt
   const handleNewDebtInputChange = (e) => {
     const { name, value } = e.target;
     setNewDebt({ ...newDebt, [name]: value });
   };
 
-  // Function to get current date in US CST
   const getCurrentDateInCST = () => {
     const now = new Date();
-    const offset = now.getTimezoneOffset() * 60000; // Convert minutes to milliseconds
-    const cstDate = new Date(now.getTime() + offset - 6 * 3600000); // Adjust for CST
-    return cstDate.toLocaleDateString(); // Format to locale date string
+    const offset = now.getTimezoneOffset() * 60000;
+    const cstDate = new Date(now.getTime() + offset - 6 * 3600000);
+    return cstDate.toLocaleDateString();
   };
   
-  // Save the updated debt information
   const handleSaveEdit = () => {
-    const updatedDebts = [...debts];
-    updatedDebts[currentDebt.index] = {
-      ...currentDebt,
-      amount: parseFloat(currentDebt.amount),
-      lastPayment: getCurrentDateInCST(), // Use CST date
-    };
-    setDebts(updatedDebts);
+    updateDebts((prevDebts) => {
+      const updatedDebts = [...prevDebts];
+      updatedDebts[currentDebt.index] = {
+        ...currentDebt,
+        amount: parseFloat(currentDebt.amount),
+        lastPayment: getCurrentDateInCST(),
+      };
+      if (updatedDebts[currentDebt.index].amount === 0) {
+        return updatedDebts.filter((_, i) => i !== currentDebt.index);
+      }
+      return updatedDebts;
+    });
     setShowEditModal(false);
-    // Remove debt if amount is zero
-    if (updatedDebts[currentDebt.index].amount === 0) {
-      handleDeleteDebt(currentDebt.index);
-    }
   };
 
-  // Add a new debt
   const handleAddDebt = () => {
     const newDebtEntry = {
       ...newDebt,
       amount: parseFloat(newDebt.amount),
-      lastPayment: getCurrentDateInCST(), // Use CST date
+      lastPayment: getCurrentDateInCST(),
     };
-    setDebts([...debts, newDebtEntry]);
+    updateDebts((prevDebts) => [...prevDebts, newDebtEntry]);
     setShowAddModal(false);
   };
 
-  // Delete a debt
   const handleDeleteDebt = (index) => {
-    const updatedDebts = debts.filter((_, i) => i !== index);
-    setDebts(updatedDebts);
+    updateDebts((prevDebts) => prevDebts.filter((_, i) => i !== index));
     setShowDeleteModal(false);
   };
 
-  // Open delete confirmation modal
   const handleDeleteConfirmation = (index) => {
     setDebtToDeleteIndex(index);
     setShowDeleteModal(true);
   };
 
-  // Calculate the total amount of all debts
   const totalDebt = debts.reduce((total, debt) => total + debt.amount, 0);
 
-  // Find the most recent payment date
   const mostRecentDate = debts.length
     ? new Date(Math.max(...debts.map(debt => new Date(debt.lastPayment)))).toLocaleDateString()
     : 'No payments made';
 
-  // Sort debts by amount (lowest to highest)
-  const sortedDebts = debts.sort((a, b) => a.amount - b.amount);
+  const sortedDebts = [...debts].sort((a, b) => a.amount - b.amount);
 
-  // Format currency function
   const formatCurrency = (amount) => {
     return amount.toLocaleString(undefined, {
       style: 'currency',
@@ -115,20 +94,16 @@ function DebtsPage() {
     });
   };
 
-  // Function to generate PDF report
   const generateReport = () => {
     const doc = new jsPDF();
     const todayDate = getCurrentDateInCST();
     
-    // Add title and today's date
     doc.setFontSize(16);
     doc.text(`Debt Report - ${todayDate}`, 20, 20);
 
-    // Add total debt
     doc.setFontSize(14);
     doc.text(`Total Debt: ${formatCurrency(totalDebt)}`, 20, 40);
 
-    // Add each debt entry
     sortedDebts.forEach((debt, index) => {
       doc.setFontSize(12);
       doc.text(
@@ -138,7 +113,6 @@ function DebtsPage() {
       );
     });
 
-    // Save the PDF
     doc.save(`Debt_Report_${todayDate}.pdf`);
   };
 
@@ -188,7 +162,6 @@ function DebtsPage() {
         ))}
       </Row>
 
-      {/* Edit Debt Modal */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Edit Debt</Modal.Title>
@@ -227,7 +200,6 @@ function DebtsPage() {
         </Modal.Footer>
       </Modal>
 
-      {/* Add New Debt Modal */}
       <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Debt</Modal.Title>
@@ -264,7 +236,6 @@ function DebtsPage() {
         </Modal.Footer>
       </Modal>
 
-      {/* Delete Debt Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Confirm Delete</Modal.Title>

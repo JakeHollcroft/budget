@@ -1,4 +1,4 @@
-import { Button, Container, Navbar, Nav, Offcanvas } from "react-bootstrap";
+import { Button, Container, Navbar, Nav, Offcanvas, Spinner } from "react-bootstrap";
 import AddBudgetModal from "./components/AddBudgetModal";
 import AddExpenseModal from "./components/AddExpenseModal";
 import BudgetCard from "./components/BudgetCard";
@@ -7,6 +7,7 @@ import UncategorizedBudgetCard from "./components/UncategorizedBudgetCard";
 import EditBudgetModal from "./components/EditBudgetModal";
 import { useState } from "react";
 import { UNCATEGORIZED_BUDGET_ID, useBudgets } from "./contexts/BudgetsContext";
+import { useData } from "./contexts/DataContext";
 import { HashRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DebtsPage from "./DebtsPage";
 import SavingsPage from "./Savings";
@@ -19,6 +20,7 @@ function App() {
   const [addExpenseModalBudgetId, setAddExpenseModalBudgetId] = useState();
   const [editBudgetId, setEditBudgetId] = useState();
   const { budgets, getBudgetExpenses } = useBudgets();
+  const { isLoading, isSaving, error, refresh } = useData();
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState();
 
   function openAddExpenseModal(budgetId) {
@@ -99,12 +101,22 @@ function App() {
     doc.save(`Budget_Report_${dateStr}.pdf`);
   }
 
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <Spinner animation="border" variant="primary" />
+        <p>Loading your data...</p>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <Navbar expand="md" className="navbar-dark mb-3" sticky="top">
         <Container>
           <Navbar.Brand as={Link} to="/" className="brand-text">
             My Budget
+            {isSaving && <span className="sync-indicator">Syncing...</span>}
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="main-navbar" />
           <Navbar.Offcanvas
@@ -145,6 +157,13 @@ function App() {
                   onClick={generateReport}
                 >
                   Report
+                </Button>
+                <Button
+                  className="nav-btn nav-btn-secondary"
+                  onClick={refresh}
+                  disabled={isLoading}
+                >
+                  Refresh
                 </Button>
               </div>
             </Offcanvas.Body>
