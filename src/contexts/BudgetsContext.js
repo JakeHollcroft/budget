@@ -68,6 +68,23 @@ export const BudgetsProvider = ({ children }) => {
     );
   };
 
+  const addOneMonth = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    date.setMonth(date.getMonth() + 1);
+    return date.toISOString().split('T')[0];
+  };
+
+  const rollBudgets = () => {
+    updateExpenses([]);
+    updateBudgets((prevBudgets) =>
+      prevBudgets.map((budget) => ({
+        ...budget,
+        dueDate: addOneMonth(budget.dueDate),
+      }))
+    );
+  };
+
   return (
     <BudgetsContext.Provider
       value={{
@@ -80,6 +97,7 @@ export const BudgetsProvider = ({ children }) => {
         deleteBudget,
         deleteExpense,
         getTotalMaxBudget,
+        rollBudgets,
       }}
     >
       {children}

@@ -152,6 +152,16 @@ body {
   border-color: var(--border-light) !important;
 }
 
+.nav-btn-warning {
+  background-color: var(--accent-warning) !important;
+  border: none !important;
+  color: #000 !important;
+}
+
+.nav-btn-warning:hover {
+  background-color: var(--accent-warning-hover) !important;
+}
+
 /* Main Content */
 .main-content {
   padding-top: 1rem;

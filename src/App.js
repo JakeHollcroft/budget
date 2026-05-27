@@ -1,4 +1,4 @@
-import { Button, Container, Navbar, Nav, Offcanvas, Spinner } from "react-bootstrap";
+import { Button, Container, Navbar, Nav, Offcanvas, Spinner, Modal } from "react-bootstrap";
 import AddBudgetModal from "./components/AddBudgetModal";
 import AddExpenseModal from "./components/AddExpenseModal";
 import BudgetCard from "./components/BudgetCard";
@@ -19,9 +19,37 @@ function App() {
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [addExpenseModalBudgetId, setAddExpenseModalBudgetId] = useState();
   const [editBudgetId, setEditBudgetId] = useState();
-  const { budgets, getBudgetExpenses } = useBudgets();
+  const { budgets, getBudgetExpenses, rollBudgets } = useBudgets();
   const { isLoading, isSaving, error, refresh } = useData();
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState();
+  const [showRollErrorModal, setShowRollErrorModal] = useState(false);
+  const [showRollConfirmModal, setShowRollConfirmModal] = useState(false);
+  const [unpaidBudgets, setUnpaidBudgets] = useState([]);
+
+  function getUnpaidBudgets() {
+    return budgets.filter((budget) => {
+      const totalExpenses = getBudgetExpenses(budget.id).reduce(
+        (sum, exp) => sum + exp.amount,
+        0
+      );
+      return totalExpenses !== budget.max;
+    });
+  }
+
+  function handleRollClick() {
+    const unpaid = getUnpaidBudgets();
+    if (unpaid.length > 0) {
+      setUnpaidBudgets(unpaid);
+      setShowRollErrorModal(true);
+    } else {
+      setShowRollConfirmModal(true);
+    }
+  }
+
+  function executeRoll() {
+    rollBudgets();
+    setShowRollConfirmModal(false);
+  }
 
   function openAddExpenseModal(budgetId) {
     setShowAddExpenseModal(true);
@@ -171,6 +199,12 @@ function App() {
                 >
                   Refresh
                 </Button>
+                <Button
+                  className="nav-btn nav-btn-warning"
+                  onClick={handleRollClick}
+                >
+                  Roll Budgets
+                </Button>
               </div>
             </Offcanvas.Body>
           </Navbar.Offcanvas>
@@ -253,6 +287,57 @@ function App() {
         handleClose={() => setEditBudgetId(null)}
         budgetId={editBudgetId}
       />
+
+      {/* Roll Budgets Error Modal */}
+      <Modal show={showRollErrorModal} onHide={() => setShowRollErrorModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Cannot Roll Budgets</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>The following budgets do not have expenses matching their budget amount:</p>
+          <ul>
+            {unpaidBudgets.map((budget) => {
+              const spent = getBudgetExpenses(budget.id).reduce(
+                (sum, exp) => sum + exp.amount,
+                0
+              );
+              return (
+                <li key={budget.id}>
+                  <strong>{budget.name}</strong>: ${spent.toFixed(2)} of ${budget.max.toFixed(2)}
+                </li>
+              );
+            })}
+          </ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRollErrorModal(false)}>
+            OK
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Roll Budgets Confirmation Modal */}
+      <Modal show={showRollConfirmModal} onHide={() => setShowRollConfirmModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Roll Budgets?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>This will:</p>
+          <ul>
+            <li>Delete all expenses (including uncategorized)</li>
+            <li>Advance all budget due dates by 1 month</li>
+          </ul>
+          <p><strong>Are you sure you want to continue?</strong></p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRollConfirmModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="warning" onClick={executeRoll}>
+            Roll Budgets
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Router>
   );
 }
