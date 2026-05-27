@@ -47,15 +47,18 @@ export default function BudgetCard({
     <Card className={classNames.join(" ")}>
       <Card.Body>
         <Card.Title className="d-flex justify-content-between align-items-baseline fw-normal mb-2">
-          <div className="me-2">{name}</div>
-          <div>{currencyFormatter.format(amount)}</div>
-        </Card.Title>
-        {max && (
-          <div className="budget-card-info mb-2">
-            {currencyFormatter.format(amount)} of {currencyFormatter.format(max)} paid
-            {dueDate && <span className="ms-2">| Due: {format(new Date(dueDate + "T00:00:00"), "MM/dd/yyyy")}</span>}
+          <div className="me-2">
+            {name}
+            {dueDate && (
+              <div className="budget-card-due">
+                Due: {format(new Date(dueDate + "T00:00:00"), "MM/dd/yyyy")}
+              </div>
+            )}
           </div>
-        )}
+          <div className="budget-card-amount">
+            {currencyFormatter.format(amount)} of {currencyFormatter.format(max)} paid
+          </div>
+        </Card.Title>
         {max && (
           <ProgressBar
             className="rounded-pill"

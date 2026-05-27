@@ -220,6 +220,20 @@ body {
   font-size: 0.875rem;
 }
 
+.budget-card-amount {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.budget-card-due {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
 /* Override Bootstrap card backgrounds with dark variants */
 .card.bg-success,
 .card.bg-opacity-10.bg-success {
