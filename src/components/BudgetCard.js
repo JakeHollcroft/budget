@@ -57,7 +57,7 @@ export default function BudgetCard({
             {currencyFormatter.format(amount)}
             {max && (
               <span className="text-muted fs-6 ms-1">
-                / {currencyFormatter.format(max)}
+                paid of {currencyFormatter.format(max)}
               </span>
             )}
           </div>
@@ -95,7 +95,8 @@ export default function BudgetCard({
 
 function getProgressBarVariant(amount, max) {
   const ratio = amount / max;
-  if (ratio < 0.5) return "primary";
-  if (ratio < 0.75) return "warning";
+  if (ratio >= 1) return "success";
+  if (ratio >= 0.75) return "info";
+  if (ratio >= 0.5) return "warning";
   return "danger";
 }
