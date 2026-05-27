@@ -216,6 +216,21 @@ function App() {
           path="/"
           element={
             <Container className="main-content">
+              <div className="budget-summary">
+                {(() => {
+                  const totalExpenses = budgets.reduce((sum, budget) => {
+                    return sum + getBudgetExpenses(budget.id).reduce(
+                      (total, expense) => total + expense.amount, 0
+                    );
+                  }, 0);
+                  const totalBudget = budgets.reduce((sum, budget) => sum + budget.max, 0);
+                  return (
+                    <span>
+                      ${totalExpenses.toFixed(2)} of ${totalBudget.toFixed(2)} paid
+                    </span>
+                  );
+                })()}
+              </div>
               <div className="budget-grid">
                 {budgets
                   .sort((a, b) => {

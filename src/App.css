@@ -234,6 +234,16 @@ body {
   margin-top: 0.25rem;
 }
 
+.budget-summary {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
 /* Override Bootstrap card backgrounds with dark variants */
 .card.bg-success,
 .card.bg-opacity-10.bg-success {
