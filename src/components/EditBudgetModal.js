@@ -1,11 +1,13 @@
 import { Modal, Form, Button } from "react-bootstrap";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useBudgets } from "../contexts/BudgetsContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function EditBudgetModal({ show, handleClose, budgetId }) {
   const nameRef = useRef();
   const maxRef = useRef();
-  const dueDateRef = useRef();
+  const [dueDate, setDueDate] = useState(new Date());
   const { budgets, editBudget, deleteBudget } = useBudgets();
   const budget = budgets.find(b => b.id === budgetId);
 
@@ -14,11 +16,10 @@ export default function EditBudgetModal({ show, handleClose, budgetId }) {
       nameRef.current.value = budget.name;
       maxRef.current.value = budget.max;
       
-      // Check if dueDate exists before trying to split
       if (budget.dueDate) {
-        dueDateRef.current.value = budget.dueDate.split('T')[0]; // Set the date input value
+        setDueDate(new Date(budget.dueDate));
       } else {
-        dueDateRef.current.value = ''; // Set empty value if no dueDate
+        setDueDate(new Date());
       }
     }
   }, [budget]);
@@ -26,29 +27,23 @@ export default function EditBudgetModal({ show, handleClose, budgetId }) {
   function handleSubmit(e) {
     e.preventDefault();
 
-    const selectedDate = new Date(dueDateRef.current.value);
-
-    // Adjust the selected date to avoid the timezone shift issue.
-    const adjustedDate = new Date(selectedDate.setDate(selectedDate.getDate() + 1));
-
     const updatedBudget = {
       id: budgetId,
       name: nameRef.current.value,
       max: parseFloat(maxRef.current.value),
-      dueDate: adjustedDate.toISOString().split('T')[0], // Only return the date part (YYYY-MM-DD)
+      dueDate: dueDate.toISOString().split('T')[0],
     };
 
-    // Directly save the budget without validation checks
     editBudget(updatedBudget);
     handleClose();
   }
 
   function handleDelete() {
-    deleteBudget({ id: budgetId });  // Pass the ID as an object with `id` property
+    deleteBudget({ id: budgetId });
     handleClose();
   }
 
-  if (!budget) return null; // Handle case when budget is not found
+  if (!budget) return null;
 
   return (
     <Modal show={show} onHide={handleClose}>
@@ -67,10 +62,11 @@ export default function EditBudgetModal({ show, handleClose, budgetId }) {
           </Form.Group>
           <Form.Group className="mb-3" controlId="dueDate">
             <Form.Label>Due Date</Form.Label>
-            <Form.Control
-              ref={dueDateRef}
-              type="date"
-              required
+            <DatePicker
+              selected={dueDate}
+              onChange={(date) => setDueDate(date)}
+              className="form-control"
+              dateFormat="MM/dd/yyyy"
             />
           </Form.Group>
           <div className="d-flex justify-content-between">

@@ -1,26 +1,23 @@
-import { Form, Modal, Button } from "react-bootstrap"
-import { useRef } from "react"
-import { useBudgets } from "../contexts/BudgetsContext"
+import { Form, Modal, Button } from "react-bootstrap";
+import { useRef, useState } from "react";
+import { useBudgets } from "../contexts/BudgetsContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function AddBudgetModal({ show, handleClose }) {
-  const nameRef = useRef()
-  const maxRef = useRef()
-  const dueDateRef = useRef()
-  const { addBudget } = useBudgets()
+  const nameRef = useRef();
+  const maxRef = useRef();
+  const [dueDate, setDueDate] = useState(new Date());
+  const { addBudget } = useBudgets();
 
   function handleSubmit(e) {
-    e.preventDefault()
-    const selectedDate = new Date(dueDateRef.current.value);
-
-    // Adjust the selected date to avoid the timezone shift issue.
-    const adjustedDate = new Date(selectedDate.setDate(selectedDate.getDate() + 1));
-
+    e.preventDefault();
     addBudget({
       name: nameRef.current.value,
       max: parseFloat(maxRef.current.value),
-      dueDate: adjustedDate.toISOString().split('T')[0], // Only return the date part (YYYY-MM-DD)
-    })
-    handleClose()
+      dueDate: dueDate.toISOString().split('T')[0],
+    });
+    handleClose();
   }
 
   return (
@@ -46,10 +43,11 @@ export default function AddBudgetModal({ show, handleClose }) {
           </Form.Group>
           <Form.Group className="mb-3" controlId="dueDate">
             <Form.Label>Due Date</Form.Label>
-            <Form.Control
-              ref={dueDateRef}
-              type="date"
-              required // Ensure this field is required
+            <DatePicker
+              selected={dueDate}
+              onChange={(date) => setDueDate(date)}
+              className="form-control"
+              dateFormat="MM/dd/yyyy"
             />
           </Form.Group>
           <div className="d-flex justify-content-end">
@@ -60,5 +58,5 @@ export default function AddBudgetModal({ show, handleClose }) {
         </Modal.Body>
       </Form>
     </Modal>
-  )
+  );
 }
