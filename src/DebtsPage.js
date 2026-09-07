@@ -44,13 +44,14 @@ function DebtsPage() {
   const handleSaveEdit = () => {
     updateDebts((prevDebts) => {
       const updatedDebts = [...prevDebts];
-      updatedDebts[currentDebt.index] = {
-        ...currentDebt,
+      const { index, originalIndex, ...debtData } = currentDebt;
+      updatedDebts[index] = {
+        ...debtData,
         amount: parseFloat(currentDebt.amount),
         lastPayment: getCurrentDateInCST(),
       };
-      if (updatedDebts[currentDebt.index].amount === 0) {
-        return updatedDebts.filter((_, i) => i !== currentDebt.index);
+      if (updatedDebts[index].amount === 0) {
+        return updatedDebts.filter((_, i) => i !== index);
       }
       return updatedDebts;
     });
@@ -83,7 +84,9 @@ function DebtsPage() {
     ? new Date(Math.max(...debts.map(debt => new Date(debt.lastPayment)))).toLocaleDateString()
     : 'No payments made';
 
-  const sortedDebts = [...debts].sort((a, b) => a.amount - b.amount);
+  const sortedDebts = debts
+    .map((debt, originalIndex) => ({ ...debt, originalIndex }))
+    .sort((a, b) => a.amount - b.amount);
 
   const formatCurrency = (amount) => {
     return amount.toLocaleString(undefined, {
@@ -141,8 +144,8 @@ function DebtsPage() {
       </div>
 
       <Row>
-        {sortedDebts.map((debt, index) => (
-          <Col key={index} md={4} className="mb-3">
+        {sortedDebts.map((debt) => (
+          <Col key={debt.originalIndex} md={4} className="mb-3">
             <Card>
               <Card.Body>
                 <Card.Title>{debt.debtor}</Card.Title>
@@ -150,10 +153,10 @@ function DebtsPage() {
                   <strong>Amount:</strong> {formatCurrency(debt.amount)} <br />
                   <strong>Last Payment Made:</strong> {new Date(debt.lastPayment).toLocaleDateString()}
                 </Card.Text>
-                <Button variant="secondary" onClick={() => handleEdit(index)} style={{ marginRight: '10px' }}>
+                <Button variant="secondary" onClick={() => handleEdit(debt.originalIndex)} style={{ marginRight: '10px' }}>
                   Edit
                 </Button>
-                <Button variant="danger" onClick={() => handleDeleteConfirmation(index)}>
+                <Button variant="danger" onClick={() => handleDeleteConfirmation(debt.originalIndex)}>
                   Delete
                 </Button>
               </Card.Body>
